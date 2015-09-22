@@ -206,7 +206,7 @@ public class Automobile implements Serializable {
 	
 	/* print */
 	public void printInfo() {
-		System.out.printf("Automotive: %s\n", this.name);
+		System.out.printf("Automotive: %s Base Price: %d\n", this.name, this.basePrice);
 		for (OptionSet set:this.opsets) {
 			if (set == null)
 				System.out.println("null");

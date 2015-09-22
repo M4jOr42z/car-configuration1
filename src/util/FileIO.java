@@ -6,13 +6,12 @@ package util;
 
 import model.Automobile;
 import java.io.*;
-import exception.AutoException;
-import exception.FixUtil;
+import exception.*;
 
 public class FileIO {
 	
 	/* instance method for parsing file and store information into automotive object */
-	public Automobile buildAutoObject(String filename) throws AutoException{
+	public Automobile buildAutoObject(String filename) throws WrongInputException{
 		BufferedReader input = null;
 		String line = null;
 		String[] lineValues = null;
@@ -25,10 +24,10 @@ public class FileIO {
 				int delimit = line.indexOf(':');
 				/* throw exception if header malformed */
 				if (delimit == -1)
-					throw new AutoException(1);
+					throw new MalformedHeaderException(1);
 				lineValues = line.substring(delimit+1).split(",");
-				if (lineValues.length != 2)
-					throw new AutoException(1);
+				if (lineValues.length != 3)
+					throw new MalformedHeaderException(1);
 				/* trim each value */
 				for (int i = 0; i < lineValues.length; i++)
 					lineValues[i] = lineValues[i].trim();
@@ -39,11 +38,12 @@ public class FileIO {
 						basePrice = Integer.parseInt(lineValues[2]);
 					}
 					catch (NumberFormatException e) {
-						throw new AutoException(2);
+						throw new MissingBasePriceException(2);
 					}
 				}
-				catch (AutoException e) {
+				catch (MissingBasePriceException e) {
 					e.recordLog("log.txt", e);
+					e.printInfo();
 					basePrice = Integer.parseInt(e.fix(e.getErrno()));
 				}
 				/* missing optionsets size handler */
@@ -53,11 +53,12 @@ public class FileIO {
 						optionsetsSize = Integer.parseInt(lineValues[1]);
 					}
 					catch (NumberFormatException e) {
-						throw new AutoException(3);
+						throw new MissingOptionSetsSizeException(3);
 					}
 				}
-				catch (AutoException e) {
+				catch (MissingOptionSetsSizeException e) {
 					e.recordLog("log.txt", e);
+					e.printInfo();
 					optionsetsSize = Integer.parseInt(e.fix(e.getErrno()));
 				}
 				/* create Auto object with extracted info */
@@ -72,10 +73,17 @@ public class FileIO {
 						eof = true;
 					else {
 						delimit = line.indexOf(':');
+						/* skip if OptionSet data entry is malformed */
+						if (delimit == -1) 
+							continue;
 						/* get OptionSet name */
 						String optionSetName = line.substring(0, delimit);
 						/* get Option (name, price) */
 						lineValues = line.substring(delimit+1).split(",");
+						/* skip if OptionSet data entry is malformed */
+						if ((lineValues.length % 2) != 0)
+							continue;
+						
 						for (int i = 0; i < lineValues.length; i++)
 							lineValues[i] = lineValues[i].trim();
 						int N = lineValues.length/2;
@@ -83,7 +91,19 @@ public class FileIO {
 						int [] optionPrices = new int[N];
 						for (int i = 0; i < 2*N; i+=2) {
 							optionNames[i/2] = lineValues[i];
-							optionPrices[i/2] = Integer.parseInt(lineValues[i+1]);
+							try {
+								try {
+									optionPrices[i/2] = Integer.parseInt(lineValues[i+1]);
+								}
+								catch (NumberFormatException e) {
+									throw new MissingOptionPriceException(4);
+								}
+							}
+							catch (MissingOptionPriceException e) {
+								e.recordLog("log.txt", e);
+								e.printInfo();
+								optionPrices[i/2] = Integer.parseInt(e.fix(e.getErrno()));
+							}
 						}
 						auto.updateOptionSet(optionSetIndex, optionSetName, 
 								             optionNames, optionPrices);
@@ -94,10 +114,15 @@ public class FileIO {
 			}
 		}
 		catch (FileNotFoundException e) {
-			throw new AutoException(0);
+			throw new WrongInputException(0);
 		}
 		catch (IOException e) {
 			System.out.println("input file cannot be read");
+		}
+		catch (MalformedHeaderException e) {
+			e.recordLog("log.txt", e);
+			e.printInfo();
+			e.fix(e.getErrno());
 		}
 		finally {
 			if (input != null) {

@@ -6,5 +6,5 @@
 package adapter;
 
 public interface FixAuto {
-	public void fix(int errno);
+	public String fix(int errno);
 }

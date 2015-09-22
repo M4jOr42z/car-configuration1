@@ -13,11 +13,9 @@ import java.util.Date;
 public class AutoException extends Exception {
 	int errno;
 	String errmsg;
-	static final int[] ERROR_NUMS  = {0, 1, 2, 3, 4, 5, 6, 7};
+	static final int[] ERROR_NUMS  = {0, 1, 2, 3, 4};
 	static final String[] ERROR_MSGS = {"Wrong input filename.", "Malformed header", "missing base price", 
-										"missing OptionSets size", "IndexOutOfBounds", 
-										"malformed OptionSet entry", "data cannot be converted to number", 
-										"mssing Option price"};
+										"missing OptionSets size", "mssing Option price"};
 	/* build specific exception */
 	public AutoException(int errno) {
 		if (errno < ERROR_NUMS.length) {
@@ -83,11 +81,14 @@ public class AutoException extends Exception {
 		case 1: f1.fixMalformedHeader();break;
 		case 2: result = f1.fixMissingBasePrice();break;
 		case 3: result = f1.fixMissingOptionSetsSize();break; 
-		case 4: f1.fixMalformedOptionSetEntry();break;
-		case 5: f1.fixMissingOptionPrice();break;
+		case 4: result = f1.fixMissingOptionPrice();break;
 		}
-		
-		return null;
+		return result;
+	}
+	
+	/* print out the error information */
+	public void printInfo() {
+		System.out.printf("(error num: %d, error message: %s)\n", errno, errmsg);
 	}
 	
 	public static void main(String[] args) {

@@ -6,9 +6,11 @@
 
 package adapter;
 
-import exception.AutoException;
+import exception.WrongInputException;
+
 import model.Automobile;
 import util.FileIO;
+import exception.AutoException;
 
 public abstract class ProxyAutomobile {
 	private static Automobile a1;
@@ -16,13 +18,22 @@ public abstract class ProxyAutomobile {
 	/* build the auto model object */
 	public void buildAuto(String filename) {
 		FileIO io = new FileIO();
-		try {
-			a1 = io.buildAutoObject(filename);
-		}
-		catch (AutoException e) {
-			e.fix(e.getErrno());
-		}
+		boolean autoLoaded = false;
+		
+		/* handle error when filename is wrong */
+		do {
+			try {
+				a1 = io.buildAutoObject(filename);
+				autoLoaded = true;
+			}
+			catch (WrongInputException e) {
+				e.recordLog("log.txt", e);
+				e.printInfo();
+				filename = fix(e.getErrno());
+			}
+		} while (!autoLoaded);
 	}
+	
 	/* print the auto model information */
 	public void printAuto(String modelName) {
 		if (a1 == null)
@@ -43,6 +54,11 @@ public abstract class ProxyAutomobile {
 			a1.updateOption(setName, optionName, newprice);
 		else
 			System.out.println("The specified model deose not exist.");
+	}
+	
+	public String fix(int errno) {
+		AutoException autoExp = new AutoException(errno);
+		return autoExp.fix(errno);
 	}
 	
 }
