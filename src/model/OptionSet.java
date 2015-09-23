@@ -5,181 +5,157 @@
 package model;
 
 import java.io.*;
+import java.util.ArrayList;
 
 class OptionSet implements Serializable {
 	private static final long serialVersionUID = 5319384422974160381L;
 	private String name;
-	private Option[] options;
+	private ArrayList<Option> options;
+	private Option choice;
 
 	/* constructor */
 	protected OptionSet() {
 		this.name = "";
-		this.options = new Option[0];
+		this.options = new ArrayList<Option>();
 	}
-	protected OptionSet(int optsize, String name) {
+	protected OptionSet(String name) {
 		this.name = name;
-		this.options = new Option[optsize];
-		for (int i = 0; i < optsize; i++) 
-			this.options[i] = new Option();
+		this.options = new ArrayList<Option>();
 	}
 	protected OptionSet(OptionSet opset) {
 		this.name = opset.getName();
-		int N = opset.getOptions().length;
-		this.options = new Option[N];
-		for (int i = 0; i < N; i++) {
-			String name = opset.getOptions()[i].getName();
-			int price =   opset.getOptions()[i].getPrice();
-			this.options[i] = new Option(name, price);
-		}
+		this.options = new ArrayList<Option>();
+		for (Option opt:opset.getOptions())
+			this.options.add(new Option(opt));
 	}
-	protected OptionSet(Option[] options, String name) {
+	protected OptionSet(ArrayList<Option> options, String name) {
 		this.name = name;
-		this.options = new Option[options.length];
-		for (int i = 0; i < options.length; i++)
-			this.options[i] = new Option(options[i]);
+		this.options = new ArrayList<Option>();
+		for (Option opt:options)
+			this.options.add(new Option(opt));
 	}
 	
 	/* getters */
 	protected String getName() {
 		return this.name;
 	}
-	protected Option[] getOptions(){
+	protected ArrayList<Option> getOptions(){
 		return this.options;
 	}
 	protected Option getOption(int n) {
-		if (n >= 0 || n <= this.options.length)
-			return this.options[n];
+		if (n >= 0 || n < this.options.size())
+			return this.options.get(n);
 		return null;
+	}
+	protected Option getOption(String name) {
+		for (int i = 0; i < this.options.size(); i++) {
+			Option opt = this.options.get(i);
+			if (opt.getName().equals(name))
+				return opt;
+		}
+		return null;
+	}
+	protected Option getOptionChoice() {
+		return this.choice;
 	}
 	
 	/* setters */
 	protected void setName(String n) {
 		this.name = n;
 	}
-	protected void setOptions(Option[] opts) {
-		if (opts.length == this.options.length) {
-			for (int i = 0; i < opts.length; i++) {
-				this.options[i].setName(opts[i].getName());
-				this.options[i].setPrice(opts[i].getPrice());
-			}
-		}
+	protected void setOptions(ArrayList<Option> opts) {
+		this.options = new ArrayList<Option>();
+		for (Option opt:opts)
+			this.options.add(opt);
 	}
 	protected void setOption(int n, Option opt) {
-		if (n >= 0 && n < options.length) {
-			if (options[n] == null)
-				options[n] = new Option();
-			options[n].setName(opt.getName());
-			options[n].setPrice(opt.getPrice());
+		if (n >= 0 && n < options.size()) {
+			this.options.set(n, opt);
 		}
+	}
+	protected void setOption(String name, Option opt) {
+		int N = this.options.size();
+		for (int i = 0; i < N; i++) {
+			Option oldopt = this.options.get(i);
+			if (oldopt.getName().equals(name)) {
+				this.options.set(i, opt);
+			}
+		}
+			
+	}
+	protected void setOptionChoice(String optionName) {
+		for (Option opt:this.options) {
+			if (opt.getName().equals(optionName))
+				this.choice = opt;
+		}
+	}
+	
+	/* add an option */
+	protected void addOption(Option opt) {
+		this.options.add(opt);
+	}
+	
+	/* remove an option */
+	protected void removeOption(Option opt) {
+		this.options.remove(opt);
 	}
 	
 	/* print method */
 	protected void printInfo() {
 		System.out.printf("The OptionSet %s:\n", this.name);
-		for (Option opt:this.options) {
-			if (opt == null)
-				System.out.println("null");
-			else
-				opt.printInfo();
-		}
+		for (Option opt:this.options) 
+			opt.printInfo();
 	}
-	
-	/*** inner class ***/
-	protected static class Option implements Serializable {
-		private static final long serialVersionUID = -4721102974730100161L;
-		private String name;
-		private int price;
-		
-		/* constructors */
-		protected Option() {
-			this.name = "";
-			this.price = 0;
-		}
-		protected Option(String name, int price) {
-			this.name = name;
-			this.price = price;
-		}
-		protected Option(Option opt) {
-			this.name = opt.getName();
-			this.price = opt.getPrice();
-		}
-		
-		/* getters */
-		protected String getName() {
-			return this.name;
-		}
-		protected int getPrice() {
-			return this.price;
-		}
-		
-		/* setters */
-		protected void setName(String name) {
-			this.name = name;
-		}
-		protected void setPrice(int price) {
-			this.price = price;
-		}
-		
-		/* print method for properties info */
-		protected void printInfo() {
-			System.out.printf("Option %s, $%d\n", this.name, this.price);
-		}
-	}
-	
+
 	/* unit test */
 	public static void main(String[] args) {
 		// test OptionSet methods
 		// constructors
-		OptionSet opset = new OptionSet(2, "Transmission");
-		System.out.println("original OptionSet:");
-		opset.printInfo();
-		System.out.println("copy OptionSet using OptionSet(OptionSet)...");
-		OptionSet opsetCopy = new OptionSet(opset);
-		System.out.println("new copy:");
-		opsetCopy.printInfo();
-		System.out.println("modify the new copy using set methods...");
-		opsetCopy.setName("Power Moonroof");
-		Option[] copyOpts = new Option[2];
-		copyOpts[0] = new Option("present", 595);
-		copyOpts[1] = new Option("not present", 0);
-		opsetCopy.setOptions(copyOpts);
-		System.out.println("the new copy after modification:");
-		opsetCopy.printInfo();
-		System.out.println("the old copy after modification:");
-		opset.printInfo();
+		System.out.println("Test constructors");
+		OptionSet set = new OptionSet();
+		set.printInfo();
+		set = new OptionSet("Standatd");
+		set.printInfo();
+		OptionSet set2;
+		set2 = new OptionSet(set);
+		set2.printInfo();
+		ArrayList<Option> options = new ArrayList<Option>();
+		options.add(new Option("Present", 875));
+		options.add(new Option("Not present", 0));
+		options.add(new Option("Half present", 415));
+		set2 = new OptionSet(options, "moonroof");
+		set2.printInfo();
 		
 		// getters
-		Option[] options = opsetCopy.getOptions();
-		System.out.println();
-		System.out.println("get all info of new copy's options:");
-		for (Option opt:options)
+		System.out.println("\nTest getters");
+		System.out.println("Name: " + set2.getName());
+		for (Option opt:set2.getOptions())
 			opt.printInfo();
-		System.out.println("modify the options from get method");
-		options[0] = new Option("Standard", 99);
-		for (Option opt:options)
-			opt.printInfo();
-		System.out.println("get all info of original copy's options:");
-		for (Option opt:opsetCopy.getOptions())
-			opt.printInfo();
-		System.out.println("get Option by index:");
-		Option opt = opsetCopy.getOption(1);
-		opt.printInfo();
+		Option opt = set2.getOption(0);
+		opt.setName("XYZLLL");
+		set2.printInfo();
+		opt = set2.getOption("Not present");
+		opt.setPrice(678);
+		set2.printInfo();
 		
 		// setters
-		System.out.println();
-		System.out.println("old opset:");
-		opset.printInfo();
-		System.out.println("set old opset using new copy opsetCopy...");
-		opset.setOptions(copyOpts);
-		System.out.println("setted old copyset: ");
-		opset.printInfo();
-		System.out.println("set old opset using set by index and Option");
-		Option setOpt = new Option("random", 102);
-		opset.setOption(123, setOpt);
-		System.out.println("after set by index out of bound:");
-		opset.printInfo();
-		System.out.println("after set by index in bound: (random, 102)");
-		opset.setOption(1, setOpt);
-		opset.printInfo();
+		System.out.println("\nTest setters");
+		set2.setName("sunroof");
+		set2.printInfo();
+		set2.setOption(0, new Option("Premium", 999));
+		set2.printInfo();
+		set2.setOption("Premium", new Option("Bronze", 123));
+		set2.printInfo();
+		System.out.println(options.size());
+		set2.setOptions(options);
+		set2.printInfo();
+		
+		// add & remove
+		Option o = new Option("newOpt", 912);
+		set2.addOption(o);
+		set2.printInfo();
+		set2.removeOption(o);
+		set2.printInfo();
+		
 	}
 }

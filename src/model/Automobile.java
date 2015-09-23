@@ -13,140 +13,153 @@
 package model;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class Automobile implements Serializable {
 	private static final long serialVersionUID = -6602495310727640916L;
-	private String name;
+	private String make;
+	private String model;
 	private int basePrice;
-	private OptionSet[] opsets;
+	private ArrayList<OptionSet> opsets;
 	
 	/* constructor */
 	// in default a Focus Wagon ZTW model, there are 5 OptionSets, base price $18445
 	public Automobile() {
-		this.name = "Focus Wagon ZTW";
-		this.basePrice = 18445;
-		this.opsets = new OptionSet[5];
-		for (int i = 0; i < 5; i++)
-			this.opsets[i] = new OptionSet();
+		this.make = "unknown";
+		this.model = "unknown";
+		this.basePrice = 0;
+		this.opsets = new ArrayList<OptionSet>();
 	}
-	public Automobile(String name, int size, int price) {
-		this.name = name;
+	public Automobile(String make, String model, int price) {
+		this.make = make;
+		this.model = model;
 		this.basePrice = price;
-		this.opsets = new OptionSet[size];
-		for (int i = 0; i < size; i++)
-			this.opsets[i] = new OptionSet();
+		this.opsets = new ArrayList<OptionSet>();
 	}
 	
 	/* getters */
-	public String getName() {
-		return this.name;
+	public String getMake() {
+		return this.make;
+	}
+	public String getModel() {
+		return this.model;
 	}
 	public int getBasePrice() {
 		return this.basePrice;
 	}
-	public OptionSet[] getOptionSets() {
-		int numOfSets = this.opsets.length;
-		OptionSet[] result = new OptionSet[numOfSets];
-		for (int i = 0; i < numOfSets; i++) {
-			result[i] = new OptionSet(this.opsets[i]);
-		}	
-		return result;
+	public ArrayList<OptionSet> getOptionSets() {
+		return this.opsets;
 	}
 	/* get OptionSet by index */
 	// return null if n is not within array range
 	public OptionSet getOptionSet(int n) {
-		if (n >= 0 && n < opsets.length)
-			return new OptionSet(this.opsets[n]);
+		if (n >= 0 && n < opsets.size())
+			return opsets.get(n);
 		return null;
 	}
 	
 	/* find methods */
 	// find an OptionSet reference in Auto by name if exist, else return null
 	public OptionSet findOptionSet(String name) {
-		int N = this.opsets.length;
-		for (int i = 0; i < N; i++) {
-			if (this.opsets[i].getName().equals(name))
-				return opsets[i];
+		for (int i = 0; i < this.opsets.size(); i++) {
+			OptionSet opset = this.opsets.get(i);
+			if (opset.getName().equals(name))
+				return opset;
 		}
 		return null;
 	}
 	// find an OptionSet index by name if exist, else return -1
 	public int findOptionSetIndex(String name) {
-		for (int i = 0; i < this.opsets.length; i++) {
-			if (this.opsets[i].getName().equals(name))
+		for (int i = 0; i < this.opsets.size(); i++) {
+			if (this.opsets.get(i).getName().equals(name))
 				return i;
 		}
 		return -1;
 	}
 	// find an Option reference in Auto by name in context of an OptionSet
 	// if not exist, return null
-	public OptionSet.Option findOption(String setname, String optname) {
+	public Option findOption(String setname, String optname) {
 		OptionSet opset = findOptionSet(setname);
 		if (opset != null) {
-			OptionSet.Option[] options = opset.getOptions();
-			int N = options.length;
-			for (int i = 0; i < N; i++) {
-				if (options[i].getName().equals(optname))
-					return options[i];
+			ArrayList<Option> options = opset.getOptions();
+			for (Option opt:options) {
+				if (opt.getName().equals(optname))
+					return opt;
 			}
 		}
 		return null;
 	}
 		
 	/* setter */
-	public void setName(String name) {
-		this.name = name;
+	public void setMake(String make) {
+		this.make = make;
+	}
+	public void setModel(String model) {
+		this.model = model;
 	}
 	public void setBasePrice(int p) {
 		this.basePrice = p;
 	}
 	public void setOptionSet(int n, OptionSet set) {
-		this.opsets[n] = set;
+		if (n >= 0 && n < this.opsets.size())
+			this.opsets.set(n, set);
 	}
-	public void setOptionSets(OptionSet[] sets) {
-		this.opsets = sets;
+	public void setOptionSet(String setName, OptionSet set) {
+		int i = findOptionSetIndex(setName);
+		if (i >= 0)
+			this.opsets.set(i, set);
 	}
-	public void setOption(int setid, int optid, OptionSet.Option opt) {
+	public void setOptionSets(ArrayList<OptionSet> sets) {
+		this.opsets = new ArrayList<OptionSet>();
+		for (OptionSet set:sets) 
+			this.opsets.add(new OptionSet(set));
+	}
+	public void setOption(int setid, int optid, Option opt) {
 		OptionSet set = getOptionSet(setid);
 		if (set != null) {
-			OptionSet.Option[] opts = set.getOptions();
-			if (optid >= 0 && optid < opts.length) 
-				set.setOption(optid, opt);
+			set.setOption(optid, opt);
 		}
+	}
+	public void setOption(String setName, String optName, Option opt) {
+		OptionSet set = findOptionSet(setName);
+		if (set != null)
+			set.setOption(optName, opt);
 	}
 	
 	/* updaters */
-	// update name and Options of OptionSet by index
-	public void updateOptionSet(int n, String setName, String[] setOptions, int[] setPrices) {
-		assert(n >= 0 && n < this.opsets.length);
+	// update a new set to auto
+	public void updateNewOptionSet(String setName, String[] setOptions, int[] setPrices) {
 		assert((setOptions.length == setPrices.length) && setOptions.length >= 0);
 		
 		// number of options
 		int N = setOptions.length;
 		// construct the new OptionSet object for update
-		OptionSet optset = new OptionSet(N, setName);
-		OptionSet.Option[] options = new OptionSet.Option[N];
-		for (int i = 0; i < N; i++)
-			options[i] = new OptionSet.Option(setOptions[i], setPrices[i]);
-		optset.setOptions(options);
-		// put the constructed set into Auto object's field
-		setOptionSet(n, optset);
+		ArrayList<Option> options = new ArrayList<Option>();
+		for (int i = 0; i < N; i++) {
+			options.add(new Option(setOptions[i], setPrices[i]));
+		}	
+		OptionSet optset = new OptionSet(options, setName);
+		// add the constructed OptionSet back
+		this.opsets.add(optset);
 	}
-	// update Options of OptionSet by name
+	// update an OptionSet by name
 	public void updateOptionSet(String setName, String[] setOptions, int[] setPrices) {
-		assert(findOptionSet(setName) != null);
-		assert((setOptions.length == setPrices.length) && setOptions.length >= 0 
-				&& setOptions.length < this.opsets.length);
+		assert(setOptions.length == setPrices.length && setOptions.length >= 0);
 		
-		// reference to the original set in Auto
-		OptionSet optset = findOptionSet(setName);
-		// number of options
-		int N = setOptions.length;
-		// construct the new Option array for update
-		OptionSet.Option[] options = new OptionSet.Option[N];
-		for (int i = 0; i < N; i++)
-			options[i] = new OptionSet.Option(setOptions[i], setPrices[i]);
-		optset.setOptions(options);
+		OptionSet set = findOptionSet(setName);
+		/* proceed if setName exist */
+		if (set != null) {
+			int N = setOptions.length;
+			ArrayList<Option> options = new ArrayList<Option>();
+			for (int i = 0; i < N; i++) {
+				options.add(new Option(setOptions[i], setPrices[i]));
+			}
+			OptionSet optset = new OptionSet(options, setName);
+			/* find the index of set wanted to be updated */
+			int i = findOptionSetIndex(setName);
+			/* update the set wanted to be updated */
+			this.opsets.set(i, optset);
+		}
 	}
 	// update OptionSet name
 	public void updatOptionSetName(String setName, String newName) {
@@ -154,156 +167,171 @@ public class Automobile implements Serializable {
 		if (optset != null)
 			optset.setName(newName);
 	}
-	// update name and price of Option by OptionSetName and index
-	public void updateOption(String setName, int optIndex, String optName, int optPrice) {
-		assert(findOptionSet(setName) != null);
-		assert(optIndex >= 0 && optIndex < findOptionSet(setName).getOptions().length);
-		
-		OptionSet optset = findOptionSet(setName);
-		OptionSet.Option opt = new OptionSet.Option(optName, optPrice);
-		optset.setOption(optIndex, opt);
+	// update a new Option into OptionSet
+	public void updateNewOption(String setName, String optName, int optPrice) {
+		OptionSet set = findOptionSet(setName);
+		if (set != null)
+			set.addOption(new Option(optName, optPrice));
 	}
-	// update price of Option by name
-	public void updateOption(String setName, String optName, int optPrice) {
-		assert(findOption(setName, optName) != null);
+	// update an Option name in OptionSet
+	public void updateOptionName(String setName, String optName, String newName) {
+		Option opt = findOption(setName, optName);
+		if (opt != null)
+			opt.setName(newName);
+	}
+	// update an Option price in OptionSet by name
+	public void updateOptionPrice(String setName, String optName, int optPrice) {
 		
-		OptionSet.Option opt = findOption(setName, optName);
-		opt.setName(optName);
-		opt.setPrice(optPrice);		
+		Option opt = findOption(setName, optName);
+		if (opt != null)
+			opt.setPrice(optPrice);		
 	}
 	
 	/* deleters */
-	// delete OptionSet by index
-	public void deleteOptionSet(int n) {
-		assert(n >= 0 && n < this.opsets.length);
-		this.opsets[n] = null;
-	}
 	// delete OptionSet by name
 	public void deleteOptionSet(String setName) {
-		int index = findOptionSetIndex(setName);
-		if (index >= 0)
-			deleteOptionSet(index);
-	}
-	// delete an Option in the context of an OptionSet by index
-	public void delteOption(String setName, int n) {
-		OptionSet optset = findOptionSet(setName);
-		if (optset != null) {
-			OptionSet.Option[] options = optset.getOptions();
-			options[n] = null;
-		}
+		OptionSet set = findOptionSet(setName);
+		if (set != null)
+			this.opsets.remove(set);
 	}
 	// delete an Option in the context of an OptionSet by name
 	public void deleteOption(String setName, String optName) {
-		OptionSet optset = findOptionSet(setName);
-		if (optset != null) {
-			OptionSet.Option[] options = optset.getOptions();
-			for (int i = 0; i < options.length; i++) {
-				if (options[i].getName().equals(optName))
-					options[i] = null;
-			}	
+		OptionSet set = findOptionSet(setName);
+		if (set != null) {
+			Option opt = findOption(setName, optName);
+			if (opt != null)
+				set.removeOption(opt);
+		}
+	}
+	
+	/* choice methods */
+	/* get the choice in an optionset */
+	// return null if user didn't choose yet
+	public String getOptionChoice(String setName) {
+		OptionSet set = findOptionSet(setName);
+		if (set != null) {
+			return set.getOptionChoice().getName();
+		}
+		return null;
+	}
+	/* get choice price of a set */
+	// return -1 if user didn't choose yet
+	public int getOptionChoicePrice(String setName) {
+		OptionSet set = findOptionSet(setName);
+		if (set != null)
+			return set.getOptionChoice().getPrice();
+		return -1;
+	}
+	/* get total price */
+	// if not all options has been made, return -1
+	public int getTotalPrice() {
+		int total = 0;
+		for (OptionSet set:this.opsets) {
+			Option choice = set.getOptionChoice();
+			if (choice == null) {
+				return -1;
+			}
+			else
+				total += choice.getPrice();	
+		}
+		total += basePrice;
+		return total;
+	}
+	/* choose a particular set, and make a choice */
+	public void setOptionChoice(String setName, String optName) {
+		OptionSet set = findOptionSet(setName);
+		if (set != null) {
+			set.setOptionChoice(optName);
 		}
 	}
 	
 	/* print */
 	public void printInfo() {
-		System.out.printf("Automotive: %s Base Price: %d\n", this.name, this.basePrice);
+		System.out.printf("make: %s, model: %s, base price: %d\n", this.make, this.model, this.basePrice);
 		for (OptionSet set:this.opsets) {
-			if (set == null)
-				System.out.println("null");
-			else
-				set.printInfo();
+			set.printInfo();
 		}
+		int totalPrice = getTotalPrice();
+		if (totalPrice >= 0)
+			System.out.printf("Price calculated from user choice: %d", totalPrice);
+		else
+			System.out.println("Price cannot be shown, since user didn't choose all options yet");
 	}
+	
 	/* unit test */
 	public static void main(String[] args) {
 		// test Automotive methods
 		System.out.println("constructors: ");
 		Automobile auto = new Automobile();
 		auto.printInfo();
-		Automobile auto2 = new Automobile("Honda Accord", 2, 19000);
+		Automobile auto2 = new Automobile("Honda", "Accord", 19000);
 		auto2.printInfo();
-		
-		// setters
-		OptionSet[] optsets = new OptionSet[2];
-		OptionSet.Option red = new OptionSet.Option("red", 0);
-		OptionSet.Option green = new OptionSet.Option("green", 0);
-		OptionSet.Option blue = new OptionSet.Option("blue", 0);
-		OptionSet.Option[] colors = new OptionSet.Option[3];
-		colors[0] = red;
-		colors[1] = green;
-		colors[2] = blue;
-		OptionSet.Option brakeStd = new OptionSet.Option("standard", 0);
-		OptionSet.Option abs = new OptionSet.Option("abs", 700);
-		OptionSet.Option[] brakes = new OptionSet.Option[2];
-		brakes[0] = brakeStd;
-		brakes[1] = abs;
-		OptionSet aset = new OptionSet(colors, "color");
-		OptionSet bset = new OptionSet(brakes, "brake");
-		optsets[0] = aset;
-		optsets[1] = bset;
-		
-		System.out.println("setters set OptionSets by sets");
-		auto2.setOptionSets(optsets);
-		auto2.printInfo();
-		System.out.println("setters set Optionset by index");
-		OptionSet.Option[] moonroof = new OptionSet.Option[2];
-		moonroof[0] = new OptionSet.Option("present", 100);
-		moonroof[1] =  new OptionSet.Option("present", 0);
-		auto2.setOptionSet(1, new OptionSet(moonroof, "moonroof"));
-		auto2.printInfo();
-		System.out.println("setters set Option by setid, optid");
-		auto2.setOption(0, 2, new OptionSet.Option("black", 0));
-		auto2.printInfo();
-		
-		// getters
-		System.out.println("getters: ");
-		System.out.println("auto name - " + auto2.getName());
-		System.out.println("auto base price - " + auto2.getBasePrice());
-		System.out.println("get all OptionSets:");
-		optsets = auto2.getOptionSets();
-		for (int i = 0; i < optsets.length; i++)
-			optsets[i].printInfo();
-		System.out.println("get OptionSet by index");
-		OptionSet cset = auto2.getOptionSet(1);
-		cset.printInfo();
-		
-		// finders
-		System.out.println("find an OptionSet reference by name");
-		cset = auto2.findOptionSet("color");
-		cset.printInfo();
-		System.out.println("find a OptionSet index by name");
-		int setId = auto2.findOptionSetIndex("moonroof");
-		System.out.println("moonroof is in " + setId);
 		
 		// updaters
 		System.out.println("update the OptionSet's Options using name");
-		String[] mrOptions = {"full", "half"};
-		int[] mrp = {1000, 500};
-		auto2.updateOptionSet("moonroof", mrOptions, mrp);
+		String[] mrOptions = {"full", "half"}, brakes = {"standard", "ABS", "Advanced ABS"};
+		int[] mrp = {1000, 500}, brk = {0, 615, 1230};
+		auto2.updateNewOptionSet("moonroof", mrOptions, mrp);
+		auto2.updateNewOptionSet("brakes", brakes, brk);
 		auto2.printInfo();
-		System.out.println("update an Option in an OptionSet by index");
-		auto2.updateOption("color", 1, "gray", 11);
+		String[] color = {"red", "green", "blue"};
+		int[] cp = {1, 2, 3};
+		auto2.updateOptionSet("moonroof", color, cp);
 		auto2.printInfo();
-		System.out.println("update an Option's price by name");
-		auto2.updateOption("moonroof", "full", 900);
+		auto2.updatOptionSetName("moonroof", "sunroof");
+		auto2.printInfo();
+		auto2.updateNewOption("sunroof", "red", 91);
+		auto2.printInfo();
+		auto2.updateOptionName("sunroof", "red", "purple");
+		auto2.printInfo();
+		auto2.updateOptionPrice("sunroof", "purple", -55);
+		auto2.printInfo();
+		System.out.println("");
+		
+		// setters
+		System.out.println("\ntest setters");
+		ArrayList<Option> options1 = new ArrayList<Option>();		
+		ArrayList<Option> options2 = new ArrayList<Option>();
+		ArrayList<OptionSet> optionSets = new ArrayList<OptionSet>();
+		options1.add(new Option("automatic", 0));
+		options1.add(new Option("manual", -815));
+		OptionSet set1 = new OptionSet(options1, "Transmission");
+		options2.add(new Option("standard", 0));
+		options2.add(new Option("ABS", 400));
+		options2.add(new Option("advanced ABS", 1625));
+		OptionSet set2 = new OptionSet(options2, "Brakes");
+		optionSets.add(set1);
+		optionSets.add(set2);
+		auto2.setOptionSets(optionSets);
+		auto2.printInfo();
+		auto2.setOptionSet("Transmission", new OptionSet());
+		auto2.printInfo();
+		auto2.setOptionSet(0, set1);
+		auto2.printInfo();
+		auto2.setOption("Transmission", "automatic", new Option("what?", 444));
+		auto2.printInfo();
+		auto2.setOption(0, 0, new Option("automatic", 0));
 		auto2.printInfo();
 		
+		// getters
+		// finders
+		
 		// deleters
-		System.out.println("delete an OptionSet by index");
-		auto2.deleteOptionSet(1);
+//		System.out.println("\ntest deleters");
+//		auto2.deleteOptionSet("Transmission");
+//		auto2.printInfo();
+//		auto2.deleteOption("Brakes", "standard");
+//		auto2.printInfo();
+		
+		// test make choice
+		String setstr1 = "Brakes";
+		String setstr2 = "Transmission";
+		auto2.setOptionChoice(setstr1, "ABS");
+		auto2.setOptionChoice(setstr2, "manual");
 		auto2.printInfo();
-		auto2.updateOptionSet(1, "moonroof", mrOptions, mrp);
-		System.out.println("delete an OptionSet by name");
-		auto2.deleteOptionSet("moonroof");
-		auto2.printInfo();
-		auto2.updateOptionSet(1, "moonroof", mrOptions, mrp);
-		System.out.println("delete an Option by index");
-		auto2.delteOption("moonroof", 1);
-		auto2.printInfo();
-		auto2.updateOption("moonroof", 1, "half", 200);
-		auto2.printInfo();
-		System.out.println("delete an Option by name");
-		auto2.deleteOption("moonroof", "full");
-		auto2.printInfo();
+		System.out.printf("\nChosen option for set %s: %s %d\n", setstr1, 
+							auto2.getOptionChoice(setstr1), auto2.getOptionChoicePrice(setstr1));
+		System.out.printf("Chosen option for set %s: %s %d\n", setstr2, 
+							auto2.getOptionChoice(setstr2), auto2.getOptionChoicePrice(setstr2));
 	}
 }

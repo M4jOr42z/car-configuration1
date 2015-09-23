@@ -46,25 +46,9 @@ public class FileIO {
 					e.printInfo();
 					basePrice = Integer.parseInt(e.fix(e.getErrno()));
 				}
-				/* missing optionsets size handler */
-				int optionsetsSize;
-				try {
-					try {
-						optionsetsSize = Integer.parseInt(lineValues[1]);
-					}
-					catch (NumberFormatException e) {
-						throw new MissingOptionSetsSizeException(3);
-					}
-				}
-				catch (MissingOptionSetsSizeException e) {
-					e.recordLog("log.txt", e);
-					e.printInfo();
-					optionsetsSize = Integer.parseInt(e.fix(e.getErrno()));
-				}
 				/* create Auto object with extracted info */
-				Automobile auto = new Automobile(lineValues[0], optionsetsSize, 
+				Automobile auto = new Automobile(lineValues[0], lineValues[1], 
 												 basePrice);
-				int optionSetIndex = 0;
 				/* parse info for Auto object OptionSets values */
 				boolean eof = false;
 				while (!eof) {
@@ -83,7 +67,6 @@ public class FileIO {
 						/* skip if OptionSet data entry is malformed */
 						if ((lineValues.length % 2) != 0)
 							continue;
-						
 						for (int i = 0; i < lineValues.length; i++)
 							lineValues[i] = lineValues[i].trim();
 						int N = lineValues.length/2;
@@ -105,9 +88,7 @@ public class FileIO {
 								optionPrices[i/2] = Integer.parseInt(e.fix(e.getErrno()));
 							}
 						}
-						auto.updateOptionSet(optionSetIndex, optionSetName, 
-								             optionNames, optionPrices);
-						optionSetIndex++;
+						auto.updateNewOptionSet(optionSetName, optionNames, optionPrices);
 					}
 				}
 				return auto;
