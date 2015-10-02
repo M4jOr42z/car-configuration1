@@ -50,13 +50,6 @@ public class Automobile implements Serializable {
 	public ArrayList<OptionSet> getOptionSets() {
 		return this.opsets;
 	}
-	/* get OptionSet by index */
-	// return null if n is not within array range
-	public OptionSet getOptionSet(int n) {
-		if (n >= 0 && n < opsets.size())
-			return opsets.get(n);
-		return null;
-	}
 	
 	/* find methods */
 	// find an OptionSet reference in Auto by name if exist, else return null
@@ -113,12 +106,6 @@ public class Automobile implements Serializable {
 		this.opsets = new ArrayList<OptionSet>();
 		for (OptionSet set:sets) 
 			this.opsets.add(new OptionSet(set));
-	}
-	public void setOption(int setid, int optid, Option opt) {
-		OptionSet set = getOptionSet(setid);
-		if (set != null) {
-			set.setOption(optid, opt);
-		}
 	}
 	public void setOption(String setName, String optName, Option opt) {
 		OptionSet set = findOptionSet(setName);
@@ -310,7 +297,6 @@ public class Automobile implements Serializable {
 		auto2.printInfo();
 		auto2.setOption("Transmission", "automatic", new Option("what?", 444));
 		auto2.printInfo();
-		auto2.setOption(0, 0, new Option("automatic", 0));
 		auto2.printInfo();
 		
 		// getters

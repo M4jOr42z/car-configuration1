@@ -6,15 +6,19 @@
 
 package adapter;
 
-import exception.WrongInputException;
-
 import model.Automobile;
-import util.FileIO;
+
+import exception.WrongInputException;
 import exception.AutoException;
+
+import util.FileIO;
 import java.util.LinkedHashMap;
 
+import scale.*;
+
 public abstract class ProxyAutomobile {
-	private static LinkedHashMap<String, Automobile> autos = new LinkedHashMap(); // (modelName, auto) pair
+	private static LinkedHashMap<String, Automobile> autos = new LinkedHashMap<String, Automobile>(); // (modelName, auto) pair
+	private Integer threadId = 0;
 	
 	/* in CreateAuto API */
 	/* build the auto model object */
@@ -72,6 +76,25 @@ public abstract class ProxyAutomobile {
 	public void makeOptionChoice(String modelname, String setName, String optName) {
 		Automobile a1 = autos.get(modelname);
 		a1.setOptionChoice(setName, optName);
+		synchronized (a1) {
+			
+		}
+	}
+	
+	/* synchronized editing */
+	public void editSetNameSync(String model, String setName, String newName) {
+		Automobile a1 = autos.get(model);
+		StringBuilder threadName = new StringBuilder(model).append(" ").append(threadId);
+		threadId++;
+		EditSetName editSetName = new EditSetName(threadName.toString(), a1, setName, newName);
+		editSetName.start();
+	}
+	public void editOptionNameSync(String model, String setName, String optName, String newName) {
+		Automobile a1 = autos.get(model);
+		StringBuilder threadName = new StringBuilder(model).append(" ").append(threadId);
+		threadId++;
+		EditOptionName editOptionName = new EditOptionName(threadName.toString(), a1, setName, optName, newName);
+		editOptionName.start();
 	}
 	
 	public String fix(int errno) {
